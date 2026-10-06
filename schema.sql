@@ -213,6 +213,12 @@ ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS winner_id UUID;
 ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS current_question_started_at TIMESTAMPTZ;
+ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS challenge_total INTEGER;
+ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS creator_score INTEGER;
+ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS creator_correct INTEGER;
+ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS creator_time_seconds INTEGER;
+ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS challenge_expires_at TIMESTAMPTZ;
+ALTER TABLE battle_rooms ADD COLUMN IF NOT EXISTS challenge_meta JSONB NOT NULL DEFAULT '{}'::jsonb;
 CREATE INDEX IF NOT EXISTS idx_battle_rooms_status ON battle_rooms(status,created_at DESC);
 CREATE TABLE IF NOT EXISTS battle_players (
   battle_id UUID NOT NULL REFERENCES battle_rooms(id) ON DELETE CASCADE,

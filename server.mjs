@@ -9,6 +9,7 @@ import multer from 'multer';
 import pdfParse from 'pdf-parse';
 import fs from 'node:fs';
 import path from 'node:path';
+import { attachNexusV53Routes, ensureNexusV53 } from './nexus-v53-addon.mjs';
 import { fileURLToPath } from 'node:url';
 const {Pool}=pg;
 const app=express();
@@ -627,6 +628,100 @@ app.get('/api/admin/notifications',auth,admin,async(_req,res)=>{const q=await po
 app.get('/api/admin/attempts',auth,admin,async(req,res)=>{const q=await pool.query(`SELECT a.*,u.student_code,u.name,u.email FROM test_attempts a JOIN users u ON u.id=a.user_id ORDER BY a.submitted_at DESC LIMIT 500`);res.json({attempts:q.rows})});
 
 // Battle Arena: polling-based realtime foundation; server is authoritative for matchmaking and scoring.
+app.post('/api/battles/challenge-everyone',auth,async(req,res)=>{
+  if(req.user.role!=='student')return res.status(403).json({error:'Student challenges are available only to students.'});
+  const body=req.body||{};
+  const ids=Array.isArray(body.question_ids)?[...new Set(body.question_ids.map(String).filter(Boolean))]:[];
+  if(ids.length<3||ids.length>150)return res.status(400).json({error:'A challenge must contain 3–150 questions.'});
+  const answers=(body.answers&&typeof body.answers==='object')?body.answers:{};
+  const existing=await pool.query(`SELECT id FROM battle_rooms WHERE creator_id=$1 AND mode='challenge_everyone' AND status='waiting' AND challenge_expires_at>NOW() LIMIT 1`,[req.user.id]);
+  if(existing.rows[0])return res.status(409).json({error:'You already have an active Challenge Everyone. Wait for it to expire or be accepted.'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const qs=(await client.query(`SELECT id,answer FROM questions WHERE id=ANY($1::text[])`,[ids])).rows;
+    const byId=new Map(qs.map(q=>[String(q.id),q]));
+    if(qs.length!==ids.length){await client.query('ROLLBACK');return res.status(400).json({error:'Some challenge questions are no longer available.'});}
+    let correct=0;
+    for(const id of ids){const sel=answers[id]==null?null:Number(answers[id]);if(sel!==null&&sel===Number(byId.get(id).answer))correct++;}
+    const total=ids.length;
+    const score=correct*100;
+    const time=Math.max(0,Math.min(7200,Number(body.time_seconds||0)));
+    const subject=body.subject?String(body.subject).slice(0,120):null;
+    const title=body.title?String(body.title).slice(0,120):'BPSC Nexus Challenge';
+    const room=(await client.query(`INSERT INTO battle_rooms(creator_id,mode,subject,question_count,seconds_per_question,status,challenge_total,creator_score,creator_correct,creator_time_seconds,challenge_expires_at,challenge_meta,updated_at) VALUES($1,'challenge_everyone',$2,$3,0,'waiting',$3,$4,$5,$6,NOW()+INTERVAL '15 minutes',$7::jsonb,NOW()) RETURNING *`,[req.user.id,subject,total,score,correct,time,JSON.stringify({title,source:String(body.source||'').slice(0,160)})])).rows[0];
+    await client.query(`INSERT INTO battle_players(battle_id,user_id,score,correct,answered) VALUES($1,$2,$3,$4,$5)`,[room.id,req.user.id,score,correct,total]);
+    for(let i=0;i<ids.length;i++)await client.query(`INSERT INTO battle_questions(battle_id,question_id,sort_order) VALUES($1,$2,$3)`,[room.id,ids[i],i]);
+    // Only students currently present receive the broadcast. Presence is heartbeat-based.
+    const recipients=(await client.query(`SELECT u.id FROM users u JOIN user_presence p ON p.user_id=u.id WHERE u.role='student' AND u.status='active' AND u.id<>$1 AND p.last_seen_at>NOW()-INTERVAL '90 seconds'`,[req.user.id])).rows;
+    const n=(await client.query(`INSERT INTO notifications(title,message,type,link,created_by) VALUES($1,$2,'battle_challenge',$3,$4) RETURNING id`,['⚔ Challenge Everyone',`${req.user.name||'A student'} challenged everyone to a ${total}-question ${subject||'Mixed GS'} battle. First student to accept gets the match.`,String(room.id),req.user.id])).rows[0];
+    for(const r of recipients)await client.query(`INSERT INTO notification_recipients(notification_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[n.id,r.id]);
+    await client.query('COMMIT');
+    await audit(req.user,'battle_challenge_everyone',null,{battle_id:room.id,recipient_count:recipients.length,question_count:total});
+    res.status(201).json({ok:true,battle:room,notified:recipients.length});
+  }catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message||'Could not create challenge.'})}finally{client.release()}
+});
+
+app.get('/api/battles/challenges/open',auth,async(req,res)=>{
+  const q=await pool.query(`SELECT r.id,r.subject,r.question_count,r.creator_score,r.creator_correct,r.creator_time_seconds,r.created_at,r.challenge_expires_at,u.name creator_name,u.student_code creator_code,(r.challenge_meta->>'title') title FROM battle_rooms r JOIN users u ON u.id=r.creator_id WHERE r.status='waiting' AND r.mode='challenge_everyone' AND r.creator_id<>$1 AND r.challenge_expires_at>NOW() ORDER BY r.created_at DESC LIMIT 25`,[req.user.id]);
+  res.json({challenges:q.rows});
+});
+
+app.post('/api/battles/:id/challenge-accept',auth,async(req,res)=>{
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const room=(await client.query(`UPDATE battle_rooms SET accepted_by=$1,status='active',started_at=NOW(),updated_at=NOW() WHERE id=$2 AND mode='challenge_everyone' AND status='waiting' AND creator_id<>$1 AND challenge_expires_at>NOW() RETURNING *`,[req.user.id,req.params.id])).rows[0];
+    if(!room){await client.query('ROLLBACK');return res.status(409).json({error:'This challenge was already accepted, cancelled or expired.'});}
+    await client.query(`INSERT INTO battle_players(battle_id,user_id,score,correct,answered) VALUES($1,$2,0,0,0) ON CONFLICT DO NOTHING`,[room.id,req.user.id]);
+    await client.query(`INSERT INTO notifications(title,message,type,link,created_by) VALUES($1,$2,'battle_update',$3,$4)`,['⚔ Challenge accepted',`${req.user.name||'A student'} accepted your challenge. Their attempt is now live.`,String(room.id),req.user.id]);
+    const creator=room.creator_id;
+    const nid=(await client.query(`SELECT id FROM notifications WHERE type='battle_update' AND link=$1 ORDER BY created_at DESC LIMIT 1`,[String(room.id)])).rows[0];
+    if(nid)await client.query(`INSERT INTO notification_recipients(notification_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[nid.id,creator]);
+    await client.query('COMMIT');
+    res.json({ok:true,battle:room});
+  }catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message||'Could not accept challenge.'})}finally{client.release()}
+});
+
+app.get('/api/battles/:id/challenge',auth,async(req,res)=>{
+  const b=(await pool.query(`SELECT r.*,cu.name creator_name,au.name accepted_name FROM battle_rooms r JOIN users cu ON cu.id=r.creator_id LEFT JOIN users au ON au.id=r.accepted_by WHERE r.id=$1 AND r.mode='challenge_everyone'`,[req.params.id])).rows[0];
+  if(!b)return res.status(404).json({error:'Challenge not found'});
+  if(b.creator_id!==req.user.id&&b.accepted_by!==req.user.id)return res.status(403).json({error:'Not a participant'});
+  const q=await pool.query(`SELECT bq.sort_order,q.id,q.question_en,q.question_hi,q.options,q.answer,q.explanation_en,q.explanation_hi,q.subject,q.topic FROM battle_questions bq JOIN questions q ON q.id=bq.question_id WHERE bq.battle_id=$1 ORDER BY bq.sort_order`,[req.params.id]);
+  const players=await pool.query(`SELECT bp.user_id,bp.score,bp.correct,bp.answered,u.name,u.student_code FROM battle_players bp JOIN users u ON u.id=bp.user_id WHERE bp.battle_id=$1`,[req.params.id]);
+  res.json({battle:b,questions:q.rows,players:players.rows});
+});
+
+app.post('/api/battles/:id/challenge-submit',auth,async(req,res)=>{
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const b=(await client.query(`SELECT * FROM battle_rooms WHERE id=$1 FOR UPDATE`,[req.params.id])).rows[0];
+    if(!b||b.mode!=='challenge_everyone')return res.status(404).json({error:'Challenge not found'});
+    if(b.accepted_by!==req.user.id)return res.status(403).json({error:'Only the accepted challenger can submit this attempt.'});
+    if(b.status!=='active')return res.status(409).json({error:'This challenge is not active.'});
+    const answers=(req.body?.answers&&typeof req.body.answers==='object')?req.body.answers:{};
+    const qs=(await client.query(`SELECT bq.question_id,q.answer FROM battle_questions bq JOIN questions q ON q.id=bq.question_id WHERE bq.battle_id=$1 ORDER BY bq.sort_order`,[b.id])).rows;
+    let correct=0,answered=0;
+    for(const q of qs){const raw=answers[String(q.question_id)];const sel=raw==null?null:Number(raw);const isCorrect=sel!==null&&sel===Number(q.answer);if(raw!=null)answered++;if(isCorrect)correct++;await client.query(`INSERT INTO battle_answers(battle_id,user_id,question_id,selected_option,is_correct,time_ms) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING`,[b.id,req.user.id,q.question_id,sel,isCorrect,Math.max(0,Number(req.body?.time_ms||0))]);}
+    const score=Math.max(0,correct*100);
+    await client.query(`UPDATE battle_players SET score=$1,correct=$2,answered=$3 WHERE battle_id=$4 AND user_id=$5`,[score,correct,answered,b.id,req.user.id]);
+    const creatorScore=Number(b.creator_score||0),creatorCorrect=Number(b.creator_correct||0);
+    const winner=score>creatorScore?req.user.id:(score<creatorScore?b.creator_id:null);
+    await client.query(`UPDATE battle_rooms SET status='completed',winner_id=$1,finished_at=NOW(),updated_at=NOW() WHERE id=$2`,[winner,b.id]);
+    const winnerXp=winner?75:35;
+    await client.query(`INSERT INTO xp_ledger(user_id,action,source_id,xp_amount) VALUES($1,'battle_challenge',$2,$3)`,[req.user.id,b.id,winner===req.user.id?winnerXp:35]);
+    await client.query(`INSERT INTO xp_ledger(user_id,action,source_id,xp_amount) VALUES($1,'battle_challenge',$2,$3)`,[b.creator_id,b.id,winner===b.creator_id?winnerXp:35]);
+    await client.query(`UPDATE users SET xp=xp+$1,level=GREATEST(1,((xp+$1)/500)::int+1),updated_at=NOW() WHERE id=$2`,[winner===req.user.id?winnerXp:35,req.user.id]);
+    await client.query(`UPDATE users SET xp=xp+$1,level=GREATEST(1,((xp+$1)/500)::int+1),updated_at=NOW() WHERE id=$2`,[winner===b.creator_id?winnerXp:35,b.creator_id]);
+    const msg=`Challenge complete: ${req.user.name||'Opponent'} scored ${score} vs your ${creatorScore}.`;
+    const n=(await client.query(`INSERT INTO notifications(title,message,type,link,created_by) VALUES($1,$2,'battle_update',$3,$4) RETURNING id`,['⚔ Challenge complete',msg,String(b.id),req.user.id])).rows[0];
+    await client.query(`INSERT INTO notification_recipients(notification_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[n.id,b.creator_id]);
+    await client.query('COMMIT');
+    res.json({ok:true,score,correct,answered,creator_score:creatorScore,winner_id:winner,battle_id:b.id});
+  }catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message||'Challenge submission failed.'})}finally{client.release()}
+});
+
 app.post('/api/battles',auth,async(req,res)=>{const b=req.body||{};const subject=b.subject?String(b.subject):null;const count=Math.min(20,Math.max(5,Number(b.question_count||20)));const seconds=Math.min(30,Math.max(10,Number(b.seconds_per_question||20)));const client=await pool.connect();try{await client.query('BEGIN');const q=await client.query(`SELECT id FROM questions WHERE ($1::text IS NULL OR lower(subject)=lower($1)) ORDER BY random() LIMIT $2`,[subject,count]);if(q.rows.length<count){await client.query('ROLLBACK');return res.status(400).json({error:'Not enough questions for this battle.'})}const room=(await client.query(`INSERT INTO battle_rooms(creator_id,mode,subject,question_count,seconds_per_question,current_question_started_at) VALUES($1,'standard',$2,$3,$4,NULL) RETURNING *`,[req.user.id,subject,count,seconds])).rows[0];await client.query(`INSERT INTO battle_players(battle_id,user_id) VALUES($1,$2)`,[room.id,req.user.id]);for(let i=0;i<q.rows.length;i++)await client.query(`INSERT INTO battle_questions(battle_id,question_id,sort_order) VALUES($1,$2,$3)`,[room.id,q.rows[i].id,i]);await client.query('COMMIT');res.status(201).json({battle:room})}catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message})}finally{client.release()}});
 app.get('/api/battles/open',auth,async(req,res)=>{const q=await pool.query(`SELECT r.id,r.subject,r.question_count,r.seconds_per_question,r.created_at,u.name creator_name,u.student_code creator_code FROM battle_rooms r JOIN users u ON u.id=r.creator_id WHERE r.status='waiting' AND r.creator_id<>$1 ORDER BY r.created_at ASC LIMIT 25`,[req.user.id]);res.json({battles:q.rows})});
 app.post('/api/battles/:id/accept',auth,async(req,res)=>{const client=await pool.connect();try{await client.query('BEGIN');const lock=await client.query(`UPDATE battle_rooms SET accepted_by=$1,status='active',started_at=NOW(),current_question_started_at=NOW(),updated_at=NOW() WHERE id=$2 AND status='waiting' AND creator_id<>$1 RETURNING *`,[req.user.id,req.params.id]);if(!lock.rows[0]){await client.query('ROLLBACK');return res.status(409).json({error:'Battle was already accepted or is unavailable.'})}await client.query(`INSERT INTO battle_players(battle_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING`,[req.params.id,req.user.id]);await client.query('COMMIT');res.json({battle:lock.rows[0],accepted:true})}catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message})}finally{client.release()}});
@@ -635,6 +730,8 @@ app.post('/api/battles/:id/answer',auth,async(req,res)=>{const b=(await pool.que
 app.post('/api/battles/:id/timeout',auth,async(req,res)=>{const client=await pool.connect();try{await client.query('BEGIN');const b=(await client.query(`SELECT * FROM battle_rooms WHERE id=$1 FOR UPDATE`,[req.params.id])).rows[0];if(!b)return res.status(404).json({error:'Battle not found'});if(b.creator_id!==req.user.id&&b.accepted_by!==req.user.id)return res.status(403).json({error:'Not a participant'});if(b.status!=='active'){await client.query('ROLLBACK');return res.json({ok:true,status:b.status})}const elapsed=b.current_question_started_at?((Date.now()-new Date(b.current_question_started_at).getTime())/1000):0;if(elapsed < Number(b.seconds_per_question)){await client.query('ROLLBACK');return res.status(409).json({error:'Question timer has not expired'});}const q=(await client.query(`SELECT question_id FROM battle_questions WHERE battle_id=$1 AND sort_order=$2`,[b.id,b.current_question])).rows[0];if(q){const players=(await client.query(`SELECT user_id FROM battle_players WHERE battle_id=$1`,[b.id])).rows;for(const pl of players){const ins=await client.query(`INSERT INTO battle_answers(battle_id,user_id,question_id,selected_option,is_correct,time_ms) VALUES($1,$2,$3,NULL,FALSE,$4) ON CONFLICT DO NOTHING RETURNING user_id`,[b.id,pl.user_id,q.question_id,Number(b.seconds_per_question)*1000]);if(ins.rows[0])await client.query(`UPDATE battle_players SET answered=answered+1 WHERE battle_id=$1 AND user_id=$2 AND answered < $3`,[b.id,pl.user_id,b.question_count]);}}const next=Number(b.current_question)+1;if(next>=Number(b.question_count)){const scores=(await client.query(`SELECT user_id,score FROM battle_players WHERE battle_id=$1 ORDER BY score DESC,answered ASC`,[b.id])).rows;const winner=scores[0]?.user_id||null;await client.query(`UPDATE battle_rooms SET status='completed',current_question=$1,winner_id=$2,finished_at=NOW(),updated_at=NOW() WHERE id=$3`,[next,winner,b.id]);for(const sp of scores){const xp=sp.user_id===winner?50:20;await client.query(`INSERT INTO xp_ledger(user_id,action,source_id,xp_amount) VALUES($1,'battle',$2,$3)`,[sp.user_id,b.id,xp]);await client.query(`UPDATE users SET xp=xp+$1,level=GREATEST(1,((xp+$1)/500)::int+1),updated_at=NOW() WHERE id=$2`,[xp,sp.user_id]);}}else{await client.query(`UPDATE battle_rooms SET current_question=$1,current_question_started_at=NOW(),updated_at=NOW() WHERE id=$2`,[next,b.id]);}await client.query('COMMIT');res.json({ok:true,advanced:true})}catch(e){await client.query('ROLLBACK');res.status(400).json({error:e.message})}finally{client.release()}});
 app.post('/api/battles/:id/cancel',auth,async(req,res)=>{const q=await pool.query(`UPDATE battle_rooms SET status='cancelled',updated_at=NOW() WHERE id=$1 AND creator_id=$2 AND status='waiting' RETURNING id`,[req.params.id,req.user.id]);res.json({ok:!!q.rows[0]})});
 app.get('/api/battles/history',auth,async(req,res)=>{const q=await pool.query(`SELECT r.id,r.status,r.subject,r.question_count,r.started_at,r.finished_at,r.winner_id,cu.name creator_name,au.name opponent_name,p.score FROM battle_rooms r JOIN battle_players p ON p.battle_id=r.id AND p.user_id=$1 JOIN users cu ON cu.id=r.creator_id LEFT JOIN users au ON au.id=CASE WHEN r.creator_id=$1 THEN r.accepted_by ELSE r.creator_id END WHERE r.status='completed' ORDER BY r.finished_at DESC LIMIT 50`,[req.user.id]);res.json({battles:q.rows})});
+
+attachNexusV53Routes(app,pool,auth,admin);
 
 app.use(async(req,res)=>res.status(404).sendFile(path.join(__dirname,'public',await hasValidSession(req)?'index.html':'login.html')));
 const port=process.env.PORT||3000;
@@ -678,6 +775,16 @@ async function initializeDatabase(){
   // Presence compatibility.
   if (await hasColumn('user_presence','user_id')) {
     await addColumn('user_presence','last_seen_at','TIMESTAMPTZ NOT NULL DEFAULT NOW()');
+  }
+
+  // Challenge Everyone compatibility.
+  if (await hasColumn('battle_rooms','id')) {
+    await addColumn('battle_rooms','challenge_total','INTEGER');
+    await addColumn('battle_rooms','creator_score','INTEGER');
+    await addColumn('battle_rooms','creator_correct','INTEGER');
+    await addColumn('battle_rooms','creator_time_seconds','INTEGER');
+    await addColumn('battle_rooms','challenge_expires_at','TIMESTAMPTZ');
+    await addColumn('battle_rooms','challenge_meta',"JSONB NOT NULL DEFAULT '{}'::jsonb");
   }
 
   // Battle compatibility.
@@ -774,6 +881,7 @@ await import('./niva-addon.mjs').then(m=>m.attachNivaRoutes(app));
 app.listen(port,async()=>{
   try{
     await initializeDatabase();
+    await ensureNexusV53(pool);
     await bootstrapAdmin();
     await import('./vault-seed.mjs').then(m=>m.seedBundledVault(pool,__dirname));
     console.log('DHYEYA running on :'+port);
