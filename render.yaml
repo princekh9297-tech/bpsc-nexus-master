@@ -6,6 +6,18 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: BPSC Nexus Admin
+      - key: ADMIN_USERNAME
+        value: admin
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
