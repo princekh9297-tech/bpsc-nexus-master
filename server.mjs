@@ -32,8 +32,8 @@ app.get('/',async(req,res)=>{
   res.set('Cache-Control','no-store');
   return res.sendFile(path.join(__dirname,'index.html'));
 });
-app.get('/admin',auth,admin,(req,res)=>res.sendFile(path.join(__dirname,'index.html')));
-app.get('/student',auth,(req,res)=>{res.set('Cache-Control','no-store');res.sendFile(path.join(__dirname,'index.html'));});
+app.get('/admin',(req,res)=>{res.set('Cache-Control','no-store');res.sendFile(path.join(__dirname,'index.html'));});
+app.get('/student',(req,res)=>{res.set('Cache-Control','no-store');res.sendFile(path.join(__dirname,'index.html'));});
 app.get('/index.html',(req,res)=>{res.set('Cache-Control','no-store');res.sendFile(path.join(__dirname,'index.html'));});
 app.use(express.static(__dirname,{index:false,setHeaders:(res,file)=>{if(/\.(html|js)$/.test(file))res.setHeader('Cache-Control','no-store')}}));
 
