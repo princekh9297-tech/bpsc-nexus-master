@@ -83,3 +83,10 @@ After uploading these four replacement files to GitHub, Render should redeploy a
 ## Important
 
 Do NOT upload a second copy of the records files from this package. Your existing eight record files are the source of the question database and are intentionally left untouched.
+
+
+## Premium Product Upgrade
+
+This build is packaged as a ₹149 launch-ready BPSC practice product. It adds a Premium Command Center with Smart Practice, BPSC Full-Length Mock (150 questions / 120 minutes / +1 and -1/3 scoring), Daily Challenge, Search Vault, PYQ Hub, Revision Bank, Mistake Notebook, Bookmarks, subject performance, weak-topic analysis, activity tracking and progress export.
+
+The source question files remain unchanged. The application reports the full 30,157-record vault while Smart Practice and premium tests use only records with machine-verifiable answer data and at least four options (29,234 records in this build). This prevents incomplete source records from being silently served in paid tests.

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08111d">
-<title>BPSC Nexus Master — Interactive Quiz Vault</title>
+<title>BPSC Nexus — 30K+ Premium BPSC Practice Vault</title>
 <style>
 :root{
   --bg:#070a11;--bg2:#0c1220;--panel:rgba(17,24,39,.78);--panel2:rgba(25,34,53,.9);
@@ -604,7 +604,7 @@ body.core-theme-active .theme-option{border-radius:14px}
 <header class="topbar">
   <div class="brand">
     <div class="brandmark"><b>N</b></div>
-    <div class="brandtext"><b>BPSC NEXUS MASTER</b><small>30,157 lossless source records · interactive quiz environment</small></div>
+    <div class="brandtext"><b>BPSC NEXUS</b><small>30,157+ source records · premium practice environment · ₹149 launch</small></div>
   </div>
   <div class="top-actions">
     <div class="theme-wrap">
@@ -623,6 +623,7 @@ body.core-theme-active .theme-option{border-radius:14px}
 <nav class="nav" aria-label="Primary">
   <button class="btn active" data-view="home" type="button">Home</button>
   <button class="btn" data-view="subjects" type="button">Subjects</button>
+  <button id="nxPremiumNav" class="btn" type="button">⚡ My Dashboard</button>
   <button id="nxCustomMockNav" class="btn" type="button">🧪 Custom Mock</button>
 </nav>
 
@@ -702,6 +703,8 @@ body.core-theme-active .theme-option{border-radius:14px}
   <div id="subjectContent"></div>
 </section>
 
+<section id="nxPremium" class="view"><div id="nxPremiumMount"></div></section>
+
 <section id="quiz" class="view">
   <div class="quiz-shell">
     <div class="quiz-top">
@@ -762,7 +765,7 @@ body.core-theme-active .theme-option{border-radius:14px}
         <select id="nxMockCount">
           <option value="10">10</option><option value="20" selected>20</option>
           <option value="30">30</option><option value="50">50</option>
-          <option value="75">75</option><option value="100">100</option>
+          <option value="75">75</option><option value="100">100</option><option value="150">150 · BPSC Full Length</option>
         </select>
       </div>
       <div class="nx-field">
@@ -809,7 +812,7 @@ body.core-theme-active .theme-option{border-radius:14px}
           <option value="30">30 minutes</option>
           <option value="45">45 minutes</option>
           <option value="60">60 minutes</option>
-          <option value="90">90 minutes</option>
+          <option value="90">90 minutes</option><option value="120">120 minutes · BPSC Full Length</option>
         </select>
       </div>
     </div>
@@ -2233,5 +2236,83 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+
+<style id="nx-premium-upgrade-css">
+.nxp-wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}.nxp-hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:26px;padding:26px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,var(--panel2)),var(--panel2));box-shadow:0 22px 70px rgba(0,0,0,.2)}.nxp-hero:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-100px;top:-130px;background:color-mix(in srgb,var(--accent) 18%,transparent);filter:blur(8px)}.nxp-kicker{font-size:10px;letter-spacing:.2em;font-weight:900;color:var(--accent);text-transform:uppercase}.nxp-title{font-size:clamp(28px,5vw,52px);line-height:1;margin:8px 0 10px;letter-spacing:-.045em}.nxp-sub{max-width:760px;color:var(--muted);line-height:1.65;font-size:13px}.nxp-price{display:inline-flex;gap:8px;align-items:center;margin-top:14px;padding:8px 12px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:999px;background:rgba(255,255,255,.035);font-weight:900}.nxp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.nxp-kpi,.nxp-card{border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:15px}.nxp-kpi b{display:block;font-size:25px;color:var(--accent)}.nxp-kpi span,.nxp-muted{font-size:10px;color:var(--muted)}.nxp-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.nxp-action{border:1px solid var(--line);background:var(--panel2);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--text);transition:.18s}.nxp-action:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}.nxp-action b{display:block;font-size:14px;margin-bottom:5px}.nxp-action span{font-size:10px;color:var(--muted);line-height:1.5}.nxp-two{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}.nxp-card h3{margin:0 0 12px;font-size:14px}.nxp-bars{display:grid;gap:9px}.nxp-barrow{display:grid;grid-template-columns:150px 1fr 45px;gap:8px;align-items:center;font-size:11px}.nxp-track{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}.nxp-track i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px}.nxp-heat{display:grid;grid-template-columns:repeat(15,1fr);gap:4px}.nxp-day{aspect-ratio:1;border-radius:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.035)}.nxp-day.l1{background:color-mix(in srgb,var(--accent) 28%,transparent)}.nxp-day.l2{background:color-mix(in srgb,var(--accent) 50%,transparent)}.nxp-day.l3{background:color-mix(in srgb,var(--accent) 75%,transparent)}.nxp-day.l4{background:var(--accent)}.nxp-table{width:100%;border-collapse:collapse;font-size:11px}.nxp-table th,.nxp-table td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left}.nxp-pill{display:inline-flex;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.05);font-size:9px;font-weight:900}.nxp-modal{position:fixed;inset:0;z-index:700;background:rgba(2,6,23,.78);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:14px}.nxp-modal.open{display:flex}.nxp-modal-card{width:min(980px,100%);max-height:92vh;overflow:auto;background:var(--panel2);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 35px 110px rgba(0,0,0,.5)}.nxp-modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.nxp-form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}.nxp-field label{display:block;font-size:10px;font-weight:900;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}.nxp-field select,.nxp-field input{width:100%;box-sizing:border-box}.nxp-preview{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px;font-size:11px;line-height:1.6}.nxp-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:13px}.nxp-search-results{display:grid;gap:8px;margin-top:14px}.nxp-qrow{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.02);cursor:pointer}.nxp-qrow:hover{border-color:var(--accent)}.nxp-qmeta{font-size:9px;color:var(--accent);font-weight:900;margin-bottom:5px}.nxp-qtext{font-size:12px;line-height:1.5}.nxp-section-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:20px 0 10px}.nxp-section-title h2{margin:0;font-size:18px}.nxp-empty{padding:18px;border:1px dashed var(--line);border-radius:15px;color:var(--muted);font-size:11px}.nxp-danger{color:#ff8b8b}.nxp-good{color:#73e3a0}.nxp-warn{color:#f6c768}
+@media(max-width:900px){.nxp-grid,.nxp-actions{grid-template-columns:repeat(2,1fr)}.nxp-two{grid-template-columns:1fr}.nxp-form{grid-template-columns:1fr}}
+@media(max-width:560px){.nxp-wrap{padding:12px 10px 40px}.nxp-grid,.nxp-actions{grid-template-columns:1fr}.nxp-barrow{grid-template-columns:110px 1fr 38px}.nxp-heat{grid-template-columns:repeat(10,1fr)}}
+
+</style>
+<script id="nx-premium-product-upgrade">
+(() => {
+'use strict';
+const NXP={modal:null};
+const E=id=>document.getElementById(id);
+const escp=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rid=r=>String(r.sourceIndex)+':'+String(r.originalIndex);
+const qtext=r=>String(r.data?.question??r.data?.q??'');
+const opts=r=>r.data?.options??r.data?.opts??[];
+const ansidx=r=>{const a=r.data?.answer??r.data?.correct??r.data?.ans;if(Number.isInteger(a))return a;if(typeof a==='string'){const m=a.trim().match(/^\(?([a-d])\)?$/i);if(m)return m[1].toLowerCase().charCodeAt(0)-97}return null};
+const valid=r=>Array.isArray(opts(r))&&opts(r).length>=4&&Number.isInteger(ansidx(r))&&ansidx(r)>=0&&ansidx(r)<opts(r).length;
+const validRecords=()=>RECORDS.filter(valid);
+const dateKey=ts=>new Date(ts).toISOString().slice(0,10);
+const todayKey=()=>dateKey(Date.now());
+const attempts=()=>Object.values(state.attempts||{});
+function pct(a,c){return a?Math.round(c/a*100):0}
+function subjStats(){
+ const out={};
+ for(const s of SUBJECTS){let a=0,c=0;const ids=new Set(recordsForSubject(s.i).map(r=>rid(r)));for(const [id,v] of Object.entries(state.attempts||{})){if(ids.has(id)){a++;if(v.correct)c++}}out[s.i]={a,c,p:pct(a,c)}}return out;
+}
+function topicStats(){
+ const map={};
+ for(const r of RECORDS){const id=rid(r),v=state.attempts?.[id];if(!v)continue;const label=topicLabel(r)||'Uncategorised';map[label]??={a:0,c:0};map[label].a++;if(v.correct)map[label].c++}
+ return Object.entries(map).map(([name,v])=>({...v,name,p:pct(v.a,v.c)})).sort((a,b)=>a.p-b.p||b.a-a.a);
+}
+function countAttemptsOn(day){let n=0;for(const v of Object.values(state.attempts||{}))if(v.ts&&dateKey(v.ts)===day)n++;return n}
+function streak(){let d=new Date();d.setHours(0,0,0,0);let n=0;while(countAttemptsOn(dateKey(d))>0){n++;d.setDate(d.getDate()-1)}return n}
+function openPremium(){setView('nxPremium');renderPremium()}
+function kpi(){const rs=validRecords(),att=attempts(),correct=att.filter(x=>x.correct).length,rev=Object.keys(state.revision||{}).length,mis=Object.keys(state.mistakes||{}).length,bm=Object.keys(state.bookmarks||{}).length;return {vault:RECORDS.length,ready:rs.length,attempted:att.length,correct,accuracy:pct(att.length,correct),rev,mis,bm,streak:streak()}}
+function renderPremium(){
+ const m=E('nxPremiumMount');if(!m)return;const k=kpi(),ss=subjStats();
+ const rows=SUBJECTS.map(s=>{const x=ss[s.i];return `<div class="nxp-barrow"><span>${escp(s.short)}</span><div class="nxp-track"><i style="width:${Math.min(100,x.p)}%"></i></div><b>${x.a?x.p+'%':'—'}</b></div>`}).join('');
+ const top=topicStats().slice(0,7).map(x=>`<tr><td>${escp(x.name)}</td><td>${x.a}</td><td>${x.c}</td><td class="${x.p<60?'nxp-danger':x.p>=80?'nxp-good':'nxp-warn'}">${x.p}%</td></tr>`).join('');
+ const days=[];for(let i=44;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const n=countAttemptsOn(dateKey(d));days.push(`<div class="nxp-day ${n>=20?'l4':n>=10?'l3':n>=3?'l2':n?'l1':''}" title="${dateKey(d)} · ${n} attempts"></div>`)}
+ m.innerHTML=`<div class="nxp-wrap"><div class="nxp-hero"><div class="nxp-kicker">BPSC NEXUS · PREMIUM COMMAND CENTER</div><div class="nxp-title">Prepare with a system,<br><em>not a question dump.</em></div><div class="nxp-sub">30K+ vault records, verified quiz-ready questions, smart practice, BPSC mocks, revision workflows and performance analytics — designed to turn a large bank into a daily preparation engine.</div><div class="nxp-price">⚡ Launch product · ₹149</div></div>
+ <div class="nxp-grid"><div class="nxp-kpi"><b>${k.vault.toLocaleString()}+</b><span>Vault records</span></div><div class="nxp-kpi"><b>${k.ready.toLocaleString()}</b><span>Quiz-ready records</span></div><div class="nxp-kpi"><b>${k.accuracy}%</b><span>Overall accuracy</span></div><div class="nxp-kpi"><b>${k.streak} 🔥</b><span>Current streak</span></div></div>
+ <div class="nxp-actions"><button class="nxp-action" onclick="NXP_PRODUCT.smart()"><b>🧠 Smart Practice</b><span>Unattempted, weak-area, revision or mixed tests.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.fullMock()"><b>📝 BPSC Full Mock</b><span>150 questions · 120 min · +1 / −1⁄3 marking.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.daily()"><b>🔥 Daily Challenge</b><span>Fresh 50-question daily vault challenge with a date-based set.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.search()"><b>🔎 Search Vault</b><span>Find questions by keyword, topic, year or source.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.revision()"><b>🔄 Revision Bank</b><span>Practice questions you deliberately saved for revision.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.mistakes()"><b>❌ Mistake Notebook</b><span>Turn incorrect attempts into a focused re-test.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.bookmarks()"><b>⭐ Bookmarks</b><span>Revisit your high-value questions.</span></button><button class="nxp-action" onclick="NXP_PRODUCT.pyq()"><b>📚 PYQ Hub</b><span>Browse the source universes and build exam-specific practice.</span></button></div>
+ <div class="nxp-two"><div class="nxp-card"><h3>Subject performance</h3><div class="nxp-bars">${rows}</div></div><div class="nxp-card"><h3>45-day activity</h3><div class="nxp-heat">${days.join('')}</div><p class="nxp-muted" style="margin-bottom:0">More activity creates a stronger preparation trail. Accuracy still matters more than volume.</p></div></div>
+ <div class="nxp-section-title"><div><h2>Weakest topics</h2><span class="nxp-muted">Based only on actual attempted questions</span></div></div><div class="nxp-card">${top?`<table class="nxp-table"><thead><tr><th>Topic</th><th>Attempted</th><th>Correct</th><th>Accuracy</th></tr></thead><tbody>${top}</tbody></table>`:'<div class="nxp-empty">Attempt some questions to unlock weak-topic analysis.</div>'}</div>
+ <div class="nxp-section-title"><div><h2>Preparation controls</h2><span class="nxp-muted">Your progress is stored locally in this browser; the existing analytics service remains optional.</span></div><button class="btn small" onclick="exportState()">Export Progress</button></div>
+ </div>`;
+}
+function modal(title,body){closeModal();const wrap=document.createElement('div');wrap.className='nxp-modal open';wrap.id='nxpModal';wrap.innerHTML=`<div class="nxp-modal-card"><div class="nxp-modal-head"><div><div class="eyebrow">BPSC NEXUS · PREMIUM TOOL</div><h2 style="margin:4px 0 0">${escp(title)}</h2></div><button class="btn small" type="button" onclick="NXP_PRODUCT.close()">✕</button></div>${body}</div>`;document.body.appendChild(wrap);wrap.addEventListener('click',e=>{if(e.target===wrap)closeModal()});NXP.modal=wrap;return wrap}
+function closeModal(){E('nxpModal')?.remove();NXP.modal=null}
+function start(items,mode='practice',origin='premium'){items=items.filter(valid);if(!items.length){showToast('No quiz-ready questions match this selection.');return}closeModal();startQuizItems(items,origin,mode,true)}
+function shuffled(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
+function smart(){const body=`<div class="nxp-form"><div class="nxp-field"><label>Question count</label><select id="nxpCount"><option>10</option><option>25</option><option selected>50</option><option>100</option><option>150</option></select></div><div class="nxp-field"><label>Strategy</label><select id="nxpStrategy"><option value="mixed">Mixed Smart</option><option value="unattempted">Unattempted</option><option value="weak">Weak Areas</option><option value="mistakes">Mistake Notebook</option><option value="revision">Revision Bank</option><option value="bookmarks">Bookmarks</option></select></div><div class="nxp-field"><label>Source</label><select id="nxpSource"><option value="all">All Vault</option><option value="pyq">PYQ only</option><option value="ca">Current Affairs</option></select></div><div class="nxp-field"><label>Mode</label><select id="nxpMode"><option value="practice">Practice Mode</option><option value="exam">Exam Mode</option></select></div></div><div id="nxpSmartPreview" class="nxp-preview"></div><div class="nxp-modal-actions"><button class="btn" onclick="NXP_PRODUCT.close()">Cancel</button><button class="btn primary" onclick="NXP_PRODUCT.smartStart()">Generate Test →</button></div>`;modal('Smart Practice',body);['nxpCount','nxpStrategy','nxpSource','nxpMode'].forEach(id=>E(id).addEventListener('change',updateSmart));updateSmart()}
+function smartPool(){let p=validRecords();const src=E('nxpSource')?.value||'all';if(src==='pyq')p=p.filter(r=>r.sourceIndex!==6);if(src==='ca')p=p.filter(r=>r.sourceIndex===6);const st=E('nxpStrategy')?.value||'mixed';if(st==='unattempted')p=p.filter(r=>!state.attempts[rid(r)]);if(st==='weak'){const bad=new Set(topicStats().filter(x=>x.p<60).map(x=>x.name));p=p.filter(r=>bad.has(topicLabel(r)))}if(st==='mistakes')p=p.filter(r=>state.mistakes[rid(r)]);if(st==='revision')p=p.filter(r=>state.revision[rid(r)]);if(st==='bookmarks')p=p.filter(r=>state.bookmarks[rid(r)]);return p}
+function updateSmart(){const p=smartPool(),n=Number(E('nxpCount')?.value||50),mode=E('nxpMode')?.value||'practice';E('nxpSmartPreview').innerHTML=`<b>${Math.min(n,p.length).toLocaleString()} questions ready</b> · ${mode==='exam'?'Exam Mode':'Practice Mode'}<br><span class="nxp-muted">${p.length.toLocaleString()} questions match this strategy.</span>`}
+function smartStart(){const p=smartPool(),n=Number(E('nxpCount').value||50),mode=E('nxpMode').value;start(shuffled(p).slice(0,n),mode,'smart-practice')}
+function fullMock(){modal('BPSC Full-Length Mock',`<div class="nxp-preview"><b>Official-style practice configuration</b><br>150 questions · 120 minutes · +1 for correct · −1/3 for incorrect · 0 for not attempted.<br><span class="nxp-muted">Questions are drawn from the verified quiz-ready vault and balanced across the eight source universes.</span></div><div class="nxp-modal-actions"><button class="btn" onclick="NXP_PRODUCT.close()">Cancel</button><button class="btn primary" onclick="NXP_PRODUCT.fullStart()">Start Full Mock →</button></div>`)}
+function fullStart(){let p=validRecords(),ids=SUBJECTS.map(s=>s.i),b=ids.map(id=>shuffled(p.filter(r=>r.sourceIndex===id)));const out=[];while(out.length<150&&b.some(x=>x.length))for(const x of b)if(x.length&&out.length<150)out.push(x.shift());start(out,'exam','bpsc-full-mock')}
+function daily(){let p=validRecords();const seed=Number(todayKey().replaceAll('-',''));function hash(i){let x=(seed+i*2654435761)>>>0;x^=x>>>16;x=Math.imul(x,2246822507)>>>0;x^=x>>>13;return x}p=[...p].sort((a,b)=>hash(Number(a.originalIndex||0)+Number(a.sourceIndex||0)*100000)-hash(Number(b.originalIndex||0)+Number(b.sourceIndex||0)*100000));start(p.slice(0,50),'exam','daily-'+todayKey())}
+function revision(){const p=validRecords().filter(r=>state.revision[rid(r)]);start(shuffled(p).slice(0,100),'practice','revision-bank')}
+function mistakes(){const p=validRecords().filter(r=>state.mistakes[rid(r)]);start(shuffled(p).slice(0,100),'practice','mistake-notebook')}
+function bookmarks(){const p=validRecords().filter(r=>state.bookmarks[rid(r)]);start(shuffled(p).slice(0,100),'practice','bookmarks')}
+function search(){const body=`<div class="nxp-form"><div class="nxp-field" style="grid-column:1/-1"><label>Search question / topic / year / source</label><input id="nxpSearch" placeholder="e.g. Champaran, Article 32, 2024, Geography" autocomplete="off"></div></div><div id="nxpSearchResults" class="nxp-search-results"><div class="nxp-empty">Type at least 3 characters.</div></div>`;modal('Search the 30K+ Vault',body);E('nxpSearch').addEventListener('input',runSearch);E('nxpSearch').focus()}
+function runSearch(){const term=String(E('nxpSearch').value||'').trim().toLowerCase(),box=E('nxpSearchResults');if(term.length<3){box.innerHTML='<div class="nxp-empty">Type at least 3 characters.</div>';return}const rs=RECORDS.filter(r=>(qtext(r)+' '+topicLabel(r)+' '+String(r.data?.year||'')+' '+String(r.sourceLabel||'')).toLowerCase().includes(term)).slice(0,50);box.innerHTML=rs.length?rs.map(r=>`<div class="nxp-qrow" onclick="NXP_PRODUCT.openQuestion('${escp(rid(r))}')"><div class="nxp-qmeta">${escp(r.sourceLabel||subjectInfo(r.sourceIndex).short)} · ${escp(r.data?.year||'')}</div><div class="nxp-qtext">${escp(qtext(r))}</div></div>`).join(''):'<div class="nxp-empty">No matching questions found.</div>'}
+function openQuestion(id){closeModal();openRecord(id)}
+function pyq(){const counts=SUBJECTS.map(s=>`<button class="nxp-action" style="width:100%;margin-bottom:8px" onclick="NXP_PRODUCT.subject(${s.i})"><b>${escp(s.short)}</b><span>${recordsForSubject(s.i).length.toLocaleString()} source records</span></button>`).join('');modal('PYQ Hub',`<div class="nxp-preview">Choose a source universe. The original question metadata remains unchanged.</div><div style="margin-top:14px">${counts}</div>`)}
+function subject(i){closeModal();openSubject(i)}
+window.NXP_PRODUCT={open:openPremium,smart,smartStart,fullMock,fullStart,daily,revision,mistakes,bookmarks,search,runSearch,openQuestion,pyq,subject,close:closeModal};
+E('nxPremiumNav')?.addEventListener('click',openPremium);
+const oldFinish=window.finishQuiz;
+if(typeof oldFinish==='function'&&!oldFinish.__nxpNegMark){
+ const wrapped=function(){const q=window.quiz,origin=q?.origin,items=q?.items||[];let correct=0,incorrect=0,unanswered=0;if(origin==='custom-mock'||origin==='bpsc-full-mock'){for(const r of items){const sel=q.answers[rid(r)],ai=ansidx(r);if(sel==null)unanswered++;else if(ai===sel)correct++;else incorrect++;}}
+ const ret=oldFinish.apply(this,arguments);if(origin==='custom-mock'||origin==='bpsc-full-mock'){const raw=correct-(incorrect/3);setTimeout(()=>{const rs=E('resultScore'),rt=E('resultTitle'),sum=E('resultSummary');if(rs)rs.textContent=`${raw.toFixed(2)} / ${items.length}`;if(rt)rt.textContent='BPSC negative-marking result';if(sum)sum.textContent=`${correct} correct · ${incorrect} incorrect · ${unanswered} not attempted · Net score uses +1 / −1⁄3.`;const card=document.querySelector('#quizResult .results-card');if(card&&!card.querySelector('[data-nxp-negative]')){const el=document.createElement('div');el.dataset.nxpNegative='1';el.className='nxp-card';el.style.margin='15px 0 0';el.innerHTML=`<b>Scoring breakdown</b><div class="nxp-grid" style="margin-bottom:0"><div class="nxp-kpi"><b>${correct}</b><span>Correct · +${correct}</span></div><div class="nxp-kpi"><b>${incorrect}</b><span>Incorrect · −${(incorrect/3).toFixed(2)}</span></div><div class="nxp-kpi"><b>${unanswered}</b><span>Not attempted · 0</span></div><div class="nxp-kpi"><b>${raw.toFixed(2)}</b><span>Net score</span></div></div>`;card.querySelector('.hero-actions')?.before(el)}},80)}return ret;};wrapped.__nxpNegMark=true;window.finishQuiz=wrapped;}
+setTimeout(()=>renderPremium(),80);
+})();
+
+</script>
 </body>
 </html>
